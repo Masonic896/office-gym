@@ -202,7 +202,30 @@
   }
   .ex-name { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
   .ex-meta { font-size: 12px; color: var(--text-light); }
-  .ex-note { font-size: 11px; color: var(--text-mid); margin-top: 2px; line-height: 1.4; }
+  .ex-edit-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 4px; flex-wrap: wrap;
+  }
+  .ex-field {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--egg-dark); border-radius: 12px; padding: 2px 4px 2px 8px;
+  }
+  .ex-row.alt .ex-field { background: #E0DCD2; }
+  .ex-field label {
+    font-size: 10px; font-weight: 600; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .ex-input {
+    border: none; background: white; border-radius: 8px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    color: var(--text-dark); padding: 3px 6px; outline: none;
+    text-align: center; min-width: 0;
+  }
+  .ex-input:focus { box-shadow: 0 0 0 2px var(--forest); }
+  .ex-input.sets { width: 44px; }
+  .ex-input.reps { width: 104px; }
+  .ex-input.edited { background: #FFF6E8; }
+  .ex-note { font-size: 11px; color: var(--text-mid); margin-top: 4px; line-height: 1.4; }
   .cat-pill {
     display: inline-block; font-size: 10px; font-weight: 600;
     padding: 2px 7px; border-radius: 10px; margin-top: 3px;
@@ -570,14 +593,25 @@
     <input type="text" class="config-input" id="sheet-id-input"
       placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" style="width:100%;margin-bottom:12px;color:var(--text-dark);background:var(--egg);border-color:var(--border);">
 
-    <div class="control-section-label">Sheet Name (which library to use)</div>
+    <div class="control-section-label">Sheet Tab Name</div>
+    <input type="text" class="config-input" id="sheet-name-input"
+      placeholder="Full Library" style="width:100%;margin-bottom:8px;color:var(--text-dark);background:var(--egg);border-color:var(--border);">
     <div class="toggle-group" style="margin-bottom:14px;">
-      <button class="toggle-btn active" id="lib-kb" onclick="setLib('KB Library', this)">KB Library</button>
-      <button class="toggle-btn" id="lib-full" onclick="setLib('Full Library', this)">Full Library</button>
+      <button class="toggle-btn" onclick="quickPick('KB Library')">KB Library</button>
+      <button class="toggle-btn" onclick="quickPick('Full Library')">Full Library</button>
     </div>
 
     <button class="regen-btn" onclick="saveConfig()" style="width:100%;">Save &amp; Connect</button>
+    <button onclick="resetConfig()" style="width:100%;margin-top:8px;padding:10px;background:none;border:1.5px solid var(--border);border-radius:20px;color:var(--text-light);font-size:13px;font-weight:500;cursor:pointer;">Reset to built-in defaults</button>
     <div id="config-status" class="status-bar" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="control-panel" style="margin-top:0;">
+    <div class="control-section-label">Set &amp; rep edits</div>
+    <div style="font-size:13px;color:var(--text-light);line-height:1.6;margin-bottom:10px;">
+      Sets and reps you change on the Circuit tab are saved per exercise and stick across regenerates.
+    </div>
+    <button onclick="clearOverrides()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--border);border-radius:20px;color:var(--text-light);font-size:13px;font-weight:500;cursor:pointer;">Clear all set &amp; rep edits</button>
   </div>
 
   <div class="control-panel" style="margin-top:0;">
@@ -591,16 +625,29 @@
 
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+//  CONFIG — fill these in once and they become the permanent defaults.
+//  Leave as empty strings to use the Setup tab instead.
+// ══════════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  apiKey:    '',              // e.g. 'AIzaSyD...'
+  sheetId:   '',              // the long ID from your Sheet's URL
+  sheetName: 'Full Library',  // which tab to read
+};
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── STATE ─────────────────────────────────────────────────────────────────
 const state = {
-  apiKey:     localStorage.getItem('gym_api_key')    || '',
-  sheetId:    localStorage.getItem('gym_sheet_id')   || '',
-  sheetName:  localStorage.getItem('gym_sheet_name') || 'KB Library',
+  apiKey:     localStorage.getItem('gym_api_key')    || CONFIG.apiKey,
+  sheetId:    localStorage.getItem('gym_sheet_id')   || CONFIG.sheetId,
+  sheetName:  localStorage.getItem('gym_sheet_name') || CONFIG.sheetName,
   exercises:  [],
   circuit:    [],   // array of {exercise, locked}
   count:      parseInt(localStorage.getItem('gym_count') || '6'),
   focus:      'Full Body',
   mode:       'Balanced',
   equip:      {KB:true, Bench:true, DB:true, Barbell:true, Bodyweight:true, Cardio:true},
+  overrides:  JSON.parse(localStorage.getItem('gym_overrides') || '{}'),
 };
 
 // ── TABS ──────────────────────────────────────────────────────────────────
@@ -641,25 +688,43 @@ function setMode(btn) {
 }
 
 // ── CONFIG ────────────────────────────────────────────────────────────────
-function setLib(name, btn) {
-  document.querySelectorAll('#lib-kb, #lib-full').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.sheetName = name;
+function quickPick(name) {
+  document.getElementById('sheet-name-input').value = name;
+}
+
+function resetConfig() {
+  localStorage.removeItem('gym_api_key');
+  localStorage.removeItem('gym_sheet_id');
+  localStorage.removeItem('gym_sheet_name');
+  state.apiKey    = CONFIG.apiKey;
+  state.sheetId   = CONFIG.sheetId;
+  state.sheetName = CONFIG.sheetName;
+  document.getElementById('api-key-input').value    = CONFIG.apiKey;
+  document.getElementById('sheet-id-input').value   = CONFIG.sheetId;
+  document.getElementById('sheet-name-input').value = CONFIG.sheetName;
+  state.exercises = [];
+  state.circuit   = [];
+  updateConfigDisplay();
+  setConfigStatus('Reset to built-in defaults.', 'success');
+  if (state.apiKey && state.sheetId) loadExercises(true);
 }
 
 function saveConfig() {
-  const key = document.getElementById('api-key-input').value.trim();
-  const id  = document.getElementById('sheet-id-input').value.trim();
+  const key  = document.getElementById('api-key-input').value.trim();
+  const id   = document.getElementById('sheet-id-input').value.trim();
+  const name = document.getElementById('sheet-name-input').value.trim() || CONFIG.sheetName;
   if (!key || !id) {
     setConfigStatus('Please enter both an API key and Sheet ID.', 'error');
     return;
   }
-  state.apiKey   = key;
-  state.sheetId  = id;
+  state.apiKey    = key;
+  state.sheetId   = id;
+  state.sheetName = name;
   localStorage.setItem('gym_api_key',    key);
   localStorage.setItem('gym_sheet_id',   id);
-  localStorage.setItem('gym_sheet_name', state.sheetName);
-  setConfigStatus('Saved! Loading exercises...', 'success');
+  localStorage.setItem('gym_sheet_name', name);
+  state.circuit = [];
+  setConfigStatus('Saved. Loading exercises...', 'success');
   updateConfigDisplay();
   loadExercises(true);
 }
@@ -869,6 +934,49 @@ function toggleLock(idx) {
   }
 }
 
+// ── SETS / REPS OVERRIDES ─────────────────────────────────────────────────
+// Keyed by exercise name so an edit sticks across regenerates and sessions.
+function getVal(ex, field) {
+  const o = state.overrides[ex.name];
+  if (o && o[field] !== undefined && o[field] !== '') return o[field];
+  return ex[field] || '';
+}
+
+function isEdited(ex, field) {
+  const o = state.overrides[ex.name];
+  return !!(o && o[field] !== undefined && o[field] !== '' && o[field] !== ex[field]);
+}
+
+function setOverride(name, field, value, inputEl) {
+  const v = value.trim();
+  if (!state.overrides[name]) state.overrides[name] = {};
+  state.overrides[name][field] = v;
+
+  // Drop the entry entirely if nothing meaningful is stored
+  const o = state.overrides[name];
+  if (!o.sets && !o.reps) delete state.overrides[name];
+
+  localStorage.setItem('gym_overrides', JSON.stringify(state.overrides));
+
+  // Update highlight without a full re-render so focus isn't lost
+  if (inputEl) {
+    const slot = state.circuit.find(s => s && s.exercise && s.exercise.name === name);
+    if (slot) inputEl.classList.toggle('edited', isEdited(slot.exercise, field));
+  }
+}
+
+function clearOverrides() {
+  state.overrides = {};
+  localStorage.removeItem('gym_overrides');
+  renderCircuit();
+  setConfigStatus('All set and rep edits cleared.', 'success');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+                  .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 // ── RENDER CIRCUIT ────────────────────────────────────────────────────────
 function catClass(cat) {
   if (!cat) return '';
@@ -904,7 +1012,21 @@ function renderCircuit() {
           <div>
             <span class="cat-pill ${catClass(ex.category)}">${ex.category}</span>
           </div>
-          <div class="ex-meta">${ex.equipment}${ex.sets ? ' · ' + ex.sets + ' sets' : ''}${ex.reps ? ' · ' + ex.reps : ''}</div>
+          <div class="ex-meta">${ex.equipment}</div>
+          <div class="ex-edit-row">
+            <span class="ex-field">
+              <label for="sets-${idx}">Sets</label>
+              <input id="sets-${idx}" class="ex-input sets${isEdited(ex,'sets') ? ' edited' : ''}"
+                     type="text" inputmode="numeric" value="${esc(getVal(ex,'sets'))}"
+                     onchange="setOverride('${esc(ex.name).replace(/'/g,"\\'")}','sets',this.value,this)">
+            </span>
+            <span class="ex-field">
+              <label for="reps-${idx}">Reps</label>
+              <input id="reps-${idx}" class="ex-input reps${isEdited(ex,'reps') ? ' edited' : ''}"
+                     type="text" value="${esc(getVal(ex,'reps'))}"
+                     onchange="setOverride('${esc(ex.name).replace(/'/g,"\\'")}','reps',this.value,this)">
+            </span>
+          </div>
           ${ex.note ? `<div class="ex-note">${ex.note}</div>` : ''}
         </div>
         <div class="ex-actions">
@@ -928,16 +1050,12 @@ function renderCircuit() {
 // ── INIT ──────────────────────────────────────────────────────────────────
 (function init() {
   document.getElementById('count-display').textContent = state.count;
+  document.getElementById('sheet-name-input').value = state.sheetName;
 
-  if (state.apiKey) {
+  if (state.apiKey && state.sheetId) {
     document.getElementById('api-key-input').value  = state.apiKey;
     document.getElementById('sheet-id-input').value = state.sheetId;
     updateConfigDisplay();
-    // Load exercises immediately
-    if (state.sheetName === 'Full Library') {
-      document.getElementById('lib-kb').classList.remove('active');
-      document.getElementById('lib-full').classList.add('active');
-    }
     loadExercises();
   } else {
     document.getElementById('not-configured').style.display = 'block';
