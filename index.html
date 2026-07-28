@@ -129,13 +129,16 @@
     cursor: pointer; transition: all 0.15s; user-select: none;
     -webkit-user-select: none;
   }
+  /* default active state = action colour, which needs DARK text */
   .toggle-btn.active {
     background: var(--action); border-color: var(--action);
     color: var(--text-dark); font-weight: 700;
   }
-  .toggle-btn.active.focus-btn { background: var(--navy); border-color: var(--navy); }
+  /* navy variants must restate white text, or they inherit the dark above */
+  .toggle-btn.active.focus-btn,
   .toggle-btn.active.mode-btn {
-    background: var(--navy); border-color: var(--navy); color: white;
+    background: var(--navy); border-color: var(--navy);
+    color: #fff; font-weight: 700;
   }
   .toggle-btn:active { transform: scale(0.97); }
 
