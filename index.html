@@ -140,6 +140,15 @@
   .control-row {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
   }
+  /* count + otter ride the right edge so the row isn't half empty */
+  .control-right {
+    margin-left: auto; display: flex; align-items: center; gap: 14px;
+  }
+  /* on narrow screens go back to a stacked, full-width layout */
+  @media (max-width: 620px) {
+    .regen-btn { flex: 1 1 100%; }
+    .control-right { margin-left: 0; width: 100%; justify-content: space-between; }
+  }
   .count-control {
     display: flex; align-items: center; gap: 8px;
     background: var(--egg); border-radius: 20px; padding: 4px 4px 4px 14px;
@@ -157,7 +166,7 @@
     min-width: 20px; text-align: center;
   }
   .regen-btn {
-    flex: 1; padding: 12px 20px; background: var(--forest);
+    flex: 0 0 auto; padding: 12px 30px; background: var(--forest);
     color: white; border: none; border-radius: 20px; font-size: 14px;
     font-weight: 700; cursor: pointer; letter-spacing: 0.3px;
     transition: all 0.15s; box-shadow: 0 2px 8px rgba(45,90,61,0.3);
@@ -208,7 +217,7 @@
     -webkit-tap-highlight-color: transparent; padding: 0 2px;
   }
   .buddy-img {
-    width: 68px; height: auto; display: block;
+    width: 80px; height: auto; display: block;
     image-rendering: -webkit-optimize-contrast;
     transition: transform 0.18s cubic-bezier(.34,1.56,.64,1);
     pointer-events: none;
@@ -435,17 +444,19 @@
     </div>
 
     <div class="control-row">
-      <div class="buddy-wrap" id="buddy" onclick="pokeBuddy()" title="don't mind him">
-        <img class="buddy-img" id="buddy-img" src="otter1.png" alt="gym otter" draggable="false">
-        <div class="buddy-label" id="buddy-label">warming up</div>
-      </div>
-      <div class="count-control">
-        <span class="count-label">Exercises</span>
-        <button class="count-btn" onclick="adjustCount(-1)">−</button>
-        <span class="count-value" id="count-display">6</span>
-        <button class="count-btn" onclick="adjustCount(1)">+</button>
-      </div>
       <button class="regen-btn" id="regen-btn" onclick="generateCircuit()">⟳ Generate</button>
+      <div class="control-right">
+        <div class="count-control">
+          <span class="count-label">Exercises</span>
+          <button class="count-btn" onclick="adjustCount(-1)">−</button>
+          <span class="count-value" id="count-display">6</span>
+          <button class="count-btn" onclick="adjustCount(1)">+</button>
+        </div>
+        <div class="buddy-wrap" id="buddy" onclick="pokeBuddy()" title="don't mind him">
+          <img class="buddy-img" id="buddy-img" src="otter1.png" alt="gym otter" draggable="false">
+          <div class="buddy-label" id="buddy-label">warming up</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1084,7 +1095,7 @@ const BUDDY = [
   { max: 2,  label:'warming up'    },   // 1-2
   { max: 5,  label:"let's go"      },   // 3-5
   { max: 9,  label:'getting spicy' },   // 6-9
-  { max:20,  label:'send help'     },   // 10-20
+  { max:20,  label:'Peaking'       },   // 10-20
 ];
 
 function buddyLevel() {
