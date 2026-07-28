@@ -13,7 +13,7 @@
   :root {
     --navy:        #1B2A4A;
     --navy-mid:    #2A3F6A;
-    --navy-lite:   #D6DCE8;
+    --navy-lite:   #CFE0F5;
     --action:      #B4A0E5;   /* wisteria - Generate, active equipment */
     --action-deep: #6B58A8;   /* darker wisteria where white text is needed */
     --action-lite: #EDE7FA;
@@ -147,27 +147,32 @@
   }
   /* otter + count stacked into one block, like an athlete card */
   .athlete-card {
-    align-self: center;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 6px; padding: 12px 18px 14px;
+    display: flex; flex-direction: row; align-items: center;
+    gap: 22px; padding: 14px 20px;
     background: var(--almond); border: 1.5px solid var(--border);
-    border-radius: 18px; min-width: 224px;
+    border-radius: 18px;
   }
-  .count-control {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--egg); border-radius: 20px; padding: 4px 4px 4px 14px;
+  .count-picker { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .count-picker-title {
+    font-size: 13px; font-weight: 700; color: var(--text-dark);
   }
-  .count-label { font-size: 13px; font-weight: 500; color: var(--text-mid); }
-  .count-btn {
-    width: 32px; height: 32px; border-radius: 50%; border: none;
-    background: var(--navy); color: white; font-size: 18px; font-weight: 300;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    line-height: 1;
+  .count-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .count-cell {
+    padding: 9px 0; border-radius: 9px; border: 1.5px solid var(--border);
+    background: white; color: var(--text-mid);
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.12s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .count-btn:active { opacity: 0.75; }
-  .count-value {
-    font-size: 16px; font-weight: 700; color: var(--navy);
-    min-width: 20px; text-align: center;
+  .count-cell:hover { border-color: var(--navy); }
+  .count-cell:active { transform: scale(0.94); }
+  .count-cell.active {
+    background: var(--navy); border-color: var(--navy);
+    color: #fff; font-weight: 700;
+  }
+  @media (max-width: 560px) {
+    .athlete-card { flex-direction: column; gap: 12px; }
+    .count-picker { width: 100%; }
   }
   .regen-btn {
     width: 100%; padding: 15px 30px; background: var(--action);
@@ -456,11 +461,9 @@
           <img class="buddy-img" id="buddy-img" src="otter1.png" alt="gym otter" draggable="false">
           <div class="buddy-label" id="buddy-label">warming up</div>
         </div>
-        <div class="count-control">
-          <span class="count-label">Exercises</span>
-          <button class="count-btn" onclick="adjustCount(-1)">−</button>
-          <span class="count-value" id="count-display">6</span>
-          <button class="count-btn" onclick="adjustCount(1)">+</button>
+        <div class="count-picker">
+          <div class="count-picker-title">How many exercises?</div>
+          <div class="count-grid" id="count-grid"></div>
         </div>
       </div>
       <button class="regen-btn" id="regen-btn" onclick="generateCircuit()">⟳ Generate</button>
@@ -769,10 +772,22 @@ function showTab(name) {
 }
 
 // ── COUNT ─────────────────────────────────────────────────────────────────
-function adjustCount(delta) {
-  state.count = Math.max(1, Math.min(20, state.count + delta));
-  document.getElementById('count-display').textContent = state.count;
+function buildCountGrid() {
+  const g = document.getElementById('count-grid');
+  if (!g) return;
+  g.innerHTML = Array.from({length: 20}, (_, i) => {
+    const n = i + 1;
+    return `<button class="count-cell${n === state.count ? ' active' : ''}"
+                    data-n="${n}" onclick="setCount(${n})"
+                    aria-label="${n} exercises">${n}</button>`;
+  }).join('');
+}
+
+function setCount(n) {
+  state.count = Math.max(1, Math.min(20, n));
   localStorage.setItem('gym_count', state.count);
+  document.querySelectorAll('.count-cell').forEach(b =>
+    b.classList.toggle('active', Number(b.dataset.n) === state.count));
   renderBuddy();
 }
 
@@ -1045,7 +1060,7 @@ function toggleLock(idx) {
 
 // ── GYM OTTER (easter egg) ────────────────────────────────────────────────
 // Five artwork stages swapped by exercise count, Sausage Fattener style.
-// Images live next to index.html as otter1.png ... otter5.png
+// Images live next to index.html as otter1.png ... otter4.png
 const BUDDY = [
   { max: 2,  label:'warming up'    },   // 1-2
   { max: 5,  label:"let's go"      },   // 3-5
@@ -1231,7 +1246,7 @@ function renderCircuit() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 (function init() {
-  document.getElementById('count-display').textContent = state.count;
+  buildCountGrid();
   document.getElementById('sheet-name-input').value = state.sheetName;
   renderBuddy();
 
