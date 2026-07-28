@@ -409,14 +409,14 @@
         <span class="count-value" id="count-display">6</span>
         <button class="count-btn" onclick="adjustCount(1)">+</button>
       </div>
-      <button class="regen-btn" id="regen-btn" onclick="regenerate()">⟳ Regenerate</button>
+      <button class="regen-btn" id="regen-btn" onclick="regenerate()">⟳ Generate</button>
     </div>
   </div>
 
   <div id="circuit-container">
     <div class="empty-state">
       <div class="icon">🏋️</div>
-      <p>Tap Regenerate to build your circuit</p>
+      <p>Tap Generate to build your circuit</p>
     </div>
   </div>
 
@@ -963,7 +963,7 @@ function _doGenerate() {
     renderCircuit();
 
     btn.classList.remove('loading');
-    btn.textContent = '⟳ Regenerate';
+    btn.textContent = '⟳ Generate';
   }, 50);
 }
 
@@ -1136,7 +1136,7 @@ function renderCircuit() {
     container.innerHTML = `
       <div class="empty-state">
         <div class="icon">🏋️</div>
-        <p>Tap Regenerate to build your circuit</p>
+        <p>Tap Generate to build your circuit</p>
       </div>`;
     return;
   }
