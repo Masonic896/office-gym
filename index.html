@@ -201,6 +201,30 @@
     justify-content: center; gap: 2px;
   }
   .ex-name { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
+  .lib-search {
+    width: 100%; padding: 11px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--egg);
+    font-family: inherit; font-size: 14px; color: var(--text-dark);
+    outline: none;
+  }
+  .lib-search:focus { border-color: var(--forest); background: white; }
+  .lib-count {
+    font-size: 12px; color: var(--text-light);
+    padding: 0 4px 8px; text-align: right;
+  }
+  .lib-group-header {
+    background: var(--navy); color: white; padding: 8px 16px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.4px;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lib-group-header span { font-weight: 500; opacity: 0.6; text-transform: none; letter-spacing: 0; }
+  .lib-row { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .lib-row:last-child { border-bottom: none; }
+  .lib-row.alt { background: var(--egg); }
+  .lib-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .lib-meta { font-size: 12px; color: var(--text-light); margin-bottom: 3px; }
+  .lib-cue { font-size: 12px; color: var(--text-mid); line-height: 1.45; }
   .ex-meta { font-size: 12px; color: var(--text-light); }
   .ex-edit-row {
     display: flex; align-items: center; gap: 6px;
@@ -336,8 +360,9 @@
 <header class="app-header">
   <div class="app-title">Office Gym</div>
   <nav class="tabs">
-    <button class="tab-btn active" onclick="showTab('generator')">Circuit Generator</button>
-    <button class="tab-btn" onclick="showTab('core')">Core Routine</button>
+    <button class="tab-btn active" onclick="showTab('generator')">Circuit</button>
+    <button class="tab-btn" onclick="showTab('core')">Core</button>
+    <button class="tab-btn" onclick="showTab('library')">Library</button>
     <button class="tab-btn minor" onclick="showTab('setup')">⚙</button>
   </nav>
 </header>
@@ -542,6 +567,39 @@
 
 </div>
 
+<!-- ── LIBRARY TAB ─────────────────────────────────────────────────────── -->
+<div id="tab-library" class="tab-panel">
+
+  <div class="control-panel">
+    <input type="text" class="lib-search" id="lib-search"
+           placeholder="Search exercises..." oninput="renderLibrary()">
+
+    <div class="control-section-label" style="margin-top:14px;">Equipment</div>
+    <div class="toggle-group" id="lib-equip-filters">
+      <button class="toggle-btn active" data-f="all" onclick="setLibEquip(this)">All</button>
+      <button class="toggle-btn" data-f="KB" onclick="setLibEquip(this)">KB</button>
+      <button class="toggle-btn" data-f="Bench" onclick="setLibEquip(this)">Bench</button>
+      <button class="toggle-btn" data-f="DB" onclick="setLibEquip(this)">DB</button>
+      <button class="toggle-btn" data-f="Barbell" onclick="setLibEquip(this)">Barbell</button>
+      <button class="toggle-btn" data-f="Bodyweight" onclick="setLibEquip(this)">Bodyweight</button>
+      <button class="toggle-btn" data-f="Cardio" onclick="setLibEquip(this)">Cardio</button>
+    </div>
+
+    <div class="control-section-label">Category</div>
+    <div class="toggle-group" id="lib-cat-filters" style="margin-bottom:0;">
+      <button class="toggle-btn focus-btn active" data-f="all" onclick="setLibCat(this)">All</button>
+      <button class="toggle-btn focus-btn" data-f="Full body" onclick="setLibCat(this)">Full body</button>
+      <button class="toggle-btn focus-btn" data-f="Upper" onclick="setLibCat(this)">Upper</button>
+      <button class="toggle-btn focus-btn" data-f="Lower" onclick="setLibCat(this)">Lower</button>
+      <button class="toggle-btn focus-btn" data-f="Core" onclick="setLibCat(this)">Core</button>
+      <button class="toggle-btn focus-btn" data-f="Cardio" onclick="setLibCat(this)">Cardio</button>
+    </div>
+  </div>
+
+  <div id="library-container"></div>
+
+</div>
+
 <!-- ── SETUP TAB ───────────────────────────────────────────────────────── -->
 <div id="tab-setup" class="tab-panel">
 
@@ -658,6 +716,10 @@ function showTab(name) {
   event.target.classList.add('active');
   if (name === 'generator' && state.exercises.length === 0 && state.apiKey) {
     loadExercises();
+  }
+  if (name === 'library') {
+    if (state.exercises.length === 0 && state.apiKey) loadExercises();
+    else renderLibrary();
   }
 }
 
@@ -788,6 +850,7 @@ async function loadExercises(showFeedback) {
 
     // Auto-generate on first load
     if (state.circuit.length === 0) regenerate();
+    renderLibrary();
 
   } catch(e) {
     setStatus('Network error — check your API key and Sheet ID', 'error');
@@ -975,6 +1038,85 @@ function clearOverrides() {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;')
                   .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── LIBRARY BROWSER ───────────────────────────────────────────────────────
+const libFilter = { equip: 'all', cat: 'all' };
+
+function setLibEquip(btn) {
+  document.querySelectorAll('#lib-equip-filters .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  libFilter.equip = btn.dataset.f;
+  renderLibrary();
+}
+
+function setLibCat(btn) {
+  document.querySelectorAll('#lib-cat-filters .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  libFilter.cat = btn.dataset.f;
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const container = document.getElementById('library-container');
+
+  if (!state.exercises.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>No exercises loaded yet.<br>Connect your sheet in the ⚙ tab.</p>
+      </div>`;
+    return;
+  }
+
+  const q = (document.getElementById('lib-search').value || '').trim().toLowerCase();
+
+  const matches = state.exercises.filter(ex => {
+    if (libFilter.equip !== 'all' && ex.tag !== libFilter.equip) return false;
+    if (libFilter.cat   !== 'all' && ex.category !== libFilter.cat) return false;
+    if (q) {
+      const hay = (ex.name + ' ' + ex.equipment + ' ' + ex.note).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (!matches.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🔍</div>
+        <p>No exercises match those filters.</p>
+      </div>`;
+    return;
+  }
+
+  // Group by category, in a sensible training order
+  const order = ['Full body','Upper','Lower','Core','Cardio'];
+  const groups = {};
+  matches.forEach(ex => {
+    const k = ex.category || 'Other';
+    (groups[k] = groups[k] || []).push(ex);
+  });
+  const keys = Object.keys(groups).sort((a,b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+
+  const html = keys.map(k => {
+    const rows = groups[k].map((ex, i) => `
+      <div class="lib-row${i % 2 ? ' alt' : ''}">
+        <div class="lib-name">${ex.name}</div>
+        <div class="lib-meta">${ex.equipment}${ex.sets ? ' · ' + ex.sets + ' sets' : ''}${ex.reps ? ' · ' + ex.reps : ''}</div>
+        ${ex.note ? `<div class="lib-cue">${ex.note}</div>` : ''}
+      </div>`).join('');
+    return `<div class="circuit-card">
+      <div class="lib-group-header">${k}<span>${groups[k].length}</span></div>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  container.innerHTML =
+    `<div class="lib-count">${matches.length} of ${state.exercises.length} exercises</div>` + html;
 }
 
 // ── RENDER CIRCUIT ────────────────────────────────────────────────────────
