@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Office Gym">
+<title>Office Gym</title>
+<style>
+  /* ── RESET & BASE ─────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:        #1B2A4A;
+    --navy-mid:    #2A3F6A;
+    --navy-lite:   #D6DCE8;
+    --forest:      #2D5A3D;
+    --forest-mid:  #3D7A52;
+    --forest-lite: #D6EAE0;
+    --egg:         #F5F2EB;
+    --egg-dark:    #EBE7DE;
+    --orange:      #E8873A;
+    --orange-lite: #FBE8D5;
+    --white:       #FFFFFF;
+    --light-bg:    #FAFAF8;
+    --text-dark:   #1A1A1A;
+    --text-mid:    #444444;
+    --text-light:  #888888;
+    --border:      #D0CFC8;
+    --radius:      10px;
+    --radius-sm:   6px;
+    --shadow:      0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.12);
+  }
+  html { font-size: 16px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: var(--egg);
+    color: var(--text-dark);
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* ── HEADER ───────────────────────────────────────────────────────── */
+  .app-header {
+    background: var(--navy);
+    padding: 16px 20px 0;
+    padding-top: calc(16px + env(safe-area-inset-top));
+    position: sticky; top: 0; z-index: 100;
+  }
+  .app-title {
+    color: white; font-size: 20px; font-weight: 700;
+    letter-spacing: -0.3px; margin-bottom: 14px;
+  }
+  .tabs {
+    display: flex; gap: 4px;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 8px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.65);
+    transition: all 0.15s; letter-spacing: 0.2px;
+  }
+  .tab-btn.active { background: var(--egg); color: var(--navy); }
+
+  /* ── TAB PANELS ───────────────────────────────────────────────────── */
+  .tab-panel { display: none; padding: 16px; }
+  .tab-panel.active { display: block; }
+
+  /* ── SETUP BANNER ─────────────────────────────────────────────────── */
+  .setup-banner {
+    background: var(--navy);
+    color: white; border-radius: var(--radius);
+    padding: 16px; margin-bottom: 16px;
+  }
+  .setup-banner h2 { font-size: 16px; margin-bottom: 8px; color: var(--orange); }
+  .setup-banner p { font-size: 13px; line-height: 1.6; opacity: 0.85; margin-bottom: 10px; }
+  .setup-banner ol { font-size: 13px; line-height: 1.8; opacity: 0.85; padding-left: 18px; }
+  .setup-banner code {
+    background: rgba(255,255,255,0.15); padding: 2px 6px;
+    border-radius: 4px; font-family: monospace; font-size: 12px;
+  }
+  .config-row {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .config-input {
+    flex: 1; min-width: 200px; padding: 10px 12px;
+    border-radius: var(--radius-sm); border: 1.5px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.1); color: white;
+    font-size: 13px; outline: none;
+  }
+  .config-input::placeholder { color: rgba(255,255,255,0.45); }
+  .config-input:focus { border-color: var(--orange); }
+  .config-save-btn {
+    padding: 10px 20px; background: var(--orange); color: white;
+    border: none; border-radius: var(--radius-sm); font-size: 13px;
+    font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .config-save-btn:active { opacity: 0.85; }
+
+  /* ── CONTROL PANEL ────────────────────────────────────────────────── */
+  .control-panel {
+    background: white; border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px;
+  }
+  .control-section-label {
+    font-size: 11px; font-weight: 600; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+  }
+  .toggle-group {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+  }
+  .toggle-btn {
+    padding: 8px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: white; color: var(--text-mid); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; user-select: none;
+    -webkit-user-select: none;
+  }
+  .toggle-btn.active {
+    background: var(--forest); border-color: var(--forest);
+    color: white; font-weight: 600;
+  }
+  .toggle-btn.active.focus-btn { background: var(--navy); border-color: var(--navy); }
+  .toggle-btn.active.mode-btn {
+    background: var(--navy-mid); border-color: var(--navy-mid);
+  }
+  .toggle-btn.active.mode-btn.random {
+    background: var(--orange); border-color: var(--orange);
+  }
+  .toggle-btn:active { transform: scale(0.97); }
+
+  .control-row {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .count-control {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--egg); border-radius: 20px; padding: 4px 4px 4px 14px;
+  }
+  .count-label { font-size: 13px; font-weight: 500; color: var(--text-mid); }
+  .count-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: var(--navy); color: white; font-size: 18px; font-weight: 300;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .count-btn:active { opacity: 0.75; }
+  .count-value {
+    font-size: 16px; font-weight: 700; color: var(--navy);
+    min-width: 20px; text-align: center;
+  }
+  .regen-btn {
+    flex: 1; padding: 12px 20px; background: var(--forest);
+    color: white; border: none; border-radius: 20px; font-size: 14px;
+    font-weight: 700; cursor: pointer; letter-spacing: 0.3px;
+    transition: all 0.15s; box-shadow: 0 2px 8px rgba(45,90,61,0.3);
+  }
+  .regen-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .regen-btn.loading { opacity: 0.7; pointer-events: none; }
+
+  /* ── CIRCUIT TABLE ────────────────────────────────────────────────── */
+  .circuit-card {
+    background: white; border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px;
+  }
+  .circuit-header {
+    background: var(--navy); padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .circuit-header h3 { color: white; font-size: 14px; font-weight: 600; }
+  .circuit-header span { color: var(--navy-lite); font-size: 12px; }
+
+  .ex-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    gap: 0; border-bottom: 1px solid var(--border);
+    min-height: 64px;
+  }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-row.locked { background: var(--navy-lite); }
+  .ex-row.alt { background: var(--egg); }
+  .ex-row.alt.locked { background: #c5cede; }
+
+  .ex-num {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--navy); color: white;
+    font-size: 12px; font-weight: 700;
+    min-height: 64px;
+  }
+  .ex-row.alt .ex-num { background: var(--navy-mid); }
+
+  .ex-main {
+    padding: 10px 12px; display: flex; flex-direction: column;
+    justify-content: center; gap: 2px;
+  }
+  .ex-name { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
+  .ex-meta { font-size: 12px; color: var(--text-light); }
+  .ex-note { font-size: 11px; color: var(--text-mid); margin-top: 2px; line-height: 1.4; }
+  .cat-pill {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 10px; margin-top: 3px;
+  }
+  .cat-full-body { background: #DCE8F5; color: #1B3A6A; }
+  .cat-lower     { background: #D6EAE0; color: #1E4A2D; }
+  .cat-upper     { background: #F5E8D6; color: #6A3A10; }
+  .cat-core      { background: #EAD6F0; color: #4A1A6A; }
+  .cat-cardio    { background: #F5D6D6; color: #6A1A1A; }
+  .cat-bench     { background: #F5EDD6; color: #5A4A10; }
+
+  .ex-actions {
+    display: flex; flex-direction: column;
+    border-left: 1px solid var(--border);
+  }
+  .ex-action-btn {
+    flex: 1; border: none; cursor: pointer; font-size: 11px;
+    font-weight: 600; transition: all 0.1s; padding: 0 10px;
+    display: flex; align-items: center; justify-content: center;
+    min-width: 52px;
+  }
+  .ex-action-btn:active { opacity: 0.7; }
+  .swap-btn { background: var(--orange-lite); color: var(--orange); border-bottom: 1px solid var(--border); }
+  .lock-btn { background: var(--navy-lite); color: var(--navy); }
+  .lock-btn.locked { background: var(--navy); color: white; }
+
+  /* ── EMPTY STATE ──────────────────────────────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-light);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* ── STATUS BAR ───────────────────────────────────────────────────── */
+  .status-bar {
+    font-size: 12px; color: var(--text-light);
+    text-align: center; padding: 8px;
+    margin-bottom: 8px;
+  }
+  .status-bar.error { color: #C0392B; }
+  .status-bar.success { color: var(--forest); }
+
+  /* ── CORE ROUTINE ─────────────────────────────────────────────────── */
+  .phase-card {
+    background: white; border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px;
+  }
+  .phase-header {
+    padding: 14px 16px;
+  }
+  .phase-header.p1 { background: var(--forest); }
+  .phase-header.p2 { background: var(--navy); }
+  .phase-header.p3 { background: #7A4A10; }
+  .phase-title { color: white; font-size: 16px; font-weight: 700; }
+  .phase-sub { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 2px; }
+  .phase-goal {
+    padding: 10px 16px; font-size: 13px; font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-goal.p1 { background: var(--forest-lite); color: var(--forest); }
+  .phase-goal.p2 { background: var(--navy-lite); color: var(--navy); }
+  .phase-goal.p3 { background: #F5EDD6; color: #5A4A10; }
+
+  .core-ex-row {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .core-ex-row:last-child { border-bottom: none; }
+  .core-ex-row.alt { background: var(--egg); }
+  .core-ex-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .core-ex-note { font-size: 11px; color: var(--text-light); margin-bottom: 6px; font-style: italic; }
+  .core-ex-meta {
+    display: flex; gap: 12px; font-size: 12px; color: var(--text-mid);
+    margin-bottom: 4px;
+  }
+  .core-ex-meta span { font-weight: 600; color: var(--text-dark); }
+  .core-ex-cue { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+
+  .note-box {
+    border-radius: var(--radius); padding: 14px 16px;
+    margin-bottom: 16px; font-size: 13px; line-height: 1.6;
+  }
+  .note-box.warn { background: #FEF3E2; color: #7A4A00; }
+  .note-box.info { background: var(--forest-lite); color: var(--forest); }
+
+  /* ── LOADING SPINNER ──────────────────────────────────────────────── */
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid var(--border);
+    border-top-color: var(--forest); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 30px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── MISC ─────────────────────────────────────────────────────────── */
+  .section-title {
+    font-size: 18px; font-weight: 700; color: var(--navy);
+    margin-bottom: 16px; margin-top: 4px;
+  }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation: none; }
+    .toggle-btn, .regen-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-title">Office Gym</div>
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="showTab('generator')">Circuit Generator</button>
+    <button class="tab-btn" onclick="showTab('core')">Core Routine</button>
+    <button class="tab-btn" onclick="showTab('setup')">Setup</button>
+  </nav>
+</header>
+
+<!-- ── GENERATOR TAB ──────────────────────────────────────────────────── -->
+<div id="tab-generator" class="tab-panel active">
+
+  <div id="not-configured" class="setup-banner" style="display:none;">
+    <h2>Connect your exercise library</h2>
+    <p>Tap the Setup tab to enter your Google Sheets API key and Sheet ID. Once connected, your exercises load automatically.</p>
+  </div>
+
+  <div id="status-bar" class="status-bar" style="display:none;"></div>
+
+  <div class="control-panel">
+    <div class="control-section-label">Equipment</div>
+    <div class="toggle-group" id="equip-toggles">
+      <button class="toggle-btn active" data-equip="KB" onclick="toggleEquip(this)">KB</button>
+      <button class="toggle-btn active" data-equip="Bench" onclick="toggleEquip(this)">Bench</button>
+      <button class="toggle-btn active" data-equip="DB" onclick="toggleEquip(this)">DB</button>
+      <button class="toggle-btn active" data-equip="Barbell" onclick="toggleEquip(this)">Barbell</button>
+      <button class="toggle-btn active" data-equip="Bodyweight" onclick="toggleEquip(this)">Bodyweight</button>
+      <button class="toggle-btn active" data-equip="Cardio" onclick="toggleEquip(this)">Cardio</button>
+    </div>
+
+    <div class="control-section-label">Focus</div>
+    <div class="toggle-group" id="focus-toggles">
+      <button class="toggle-btn focus-btn active" data-focus="Full Body" onclick="setFocus(this)">Full Body</button>
+      <button class="toggle-btn focus-btn" data-focus="Upper" onclick="setFocus(this)">Upper</button>
+      <button class="toggle-btn focus-btn" data-focus="Lower" onclick="setFocus(this)">Lower</button>
+      <button class="toggle-btn focus-btn" data-focus="Core" onclick="setFocus(this)">Core</button>
+    </div>
+
+    <div class="control-section-label">Mode</div>
+    <div class="toggle-group" id="mode-toggles" style="margin-bottom:14px;">
+      <button class="toggle-btn mode-btn active" data-mode="Balanced" onclick="setMode(this)">Balanced</button>
+      <button class="toggle-btn mode-btn random" data-mode="Random" onclick="setMode(this)">Random</button>
+    </div>
+
+    <div class="control-row">
+      <div class="count-control">
+        <span class="count-label">Exercises</span>
+        <button class="count-btn" onclick="adjustCount(-1)">−</button>
+        <span class="count-value" id="count-display">6</span>
+        <button class="count-btn" onclick="adjustCount(1)">+</button>
+      </div>
+      <button class="regen-btn" id="regen-btn" onclick="regenerate()">⟳ Regenerate</button>
+    </div>
+  </div>
+
+  <div id="circuit-container">
+    <div class="empty-state">
+      <div class="icon">🏋️</div>
+      <p>Tap Regenerate to build your circuit</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── CORE ROUTINE TAB ───────────────────────────────────────────────── -->
+<div id="tab-core" class="tab-panel">
+
+  <div class="note-box warn">
+    <strong>Progression:</strong> Move to the next phase when every set feels clean and the last rep matches the first. Minimum 3–4 weeks per phase.
+  </div>
+
+  <div class="note-box info">
+    <strong>Session order:</strong> Always start with Dead bug and Glute bridge. Finish with planks. Rest 45–60 sec between sets in Phase 1, 30–45 sec in Phases 2–3.
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase-card">
+    <div class="phase-header p1">
+      <div class="phase-title">Phase 1 — Foundation</div>
+      <div class="phase-sub">Weeks 1–4  ·  ~15 min per session</div>
+    </div>
+    <div class="phase-goal p1">Goal: Activate the deep core — learn to brace, zero pain</div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Dead bug ⭐</div>
+      <div class="core-ex-note">Most important move — master this before anything else</div>
+      <div class="core-ex-meta"><span>2–3 sets</span><span>5 reps/side</span></div>
+      <div class="core-ex-cue">Low back glued to floor. Extend opposite arm and leg slowly — 3 sec down.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Glute bridge</div>
+      <div class="core-ex-note">Weak glutes are a primary driver of lower back pain</div>
+      <div class="core-ex-meta"><span>2–3 sets</span><span>10 reps</span></div>
+      <div class="core-ex-cue">Feet flat, drive hips up, squeeze glutes and hold 2 sec at top.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Modified plank (knees down)</div>
+      <div class="core-ex-note">Progress to full plank in Phase 2</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>20 sec</span></div>
+      <div class="core-ex-cue">Hollow your belly button in. Don't just hold — actively squeeze everything.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Bird dog</div>
+      <div class="core-ex-note">Move slow. Speed is the enemy here</div>
+      <div class="core-ex-meta"><span>2–3 sets</span><span>5 reps/side</span></div>
+      <div class="core-ex-cue">On all fours, extend opposite arm and leg. Hips stay perfectly level.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Side-lying hip abduction</div>
+      <div class="core-ex-note">Hits lateral stabilizers most people ignore</div>
+      <div class="core-ex-meta"><span>2–3 sets</span><span>10 reps/side</span></div>
+      <div class="core-ex-cue">Straight leg raises lying on your side. Hips stacked, don't roll back.</div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase-card">
+    <div class="phase-header p2">
+      <div class="phase-title">Phase 2 — Build</div>
+      <div class="phase-sub">Weeks 5–8  ·  ~20 min per session</div>
+    </div>
+    <div class="phase-goal p2">Goal: Time under tension — add anti-rotation, longer holds</div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Dead bug (slow)</div>
+      <div class="core-ex-note">Same move as Phase 1 — just slower and more reps</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>8 reps/side</span></div>
+      <div class="core-ex-cue">3 sec down, 1 sec hold at bottom. Low back stays flat throughout.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Full plank</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>30–40 sec</span></div>
+      <div class="core-ex-cue">Hollow body — squeeze glutes, quads, and abs simultaneously. Don't let hips sag.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Side plank</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>20–30 sec/side</span></div>
+      <div class="core-ex-cue">Start knees-down if needed. Body in straight line, don't let hips drop.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Single-leg glute bridge</div>
+      <div class="core-ex-note">Significantly harder than standard bridge — go slow</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>8 reps/side</span></div>
+      <div class="core-ex-cue">One foot flat, other leg extended. Drive through heel, keep hips level.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Bird dog with 3-sec hold</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>8 reps/side</span></div>
+      <div class="core-ex-cue">Hold the extended position 3 full seconds before returning. No wobble.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Hollow body hold</div>
+      <div class="core-ex-note">Hardest move of this phase — start with 10 sec if needed</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>15–20 sec</span></div>
+      <div class="core-ex-cue">Flat on back, arms overhead, press low back into floor, lift shoulders and legs slightly.</div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase-card">
+    <div class="phase-header p3">
+      <div class="phase-title">Phase 3 — Strength</div>
+      <div class="phase-sub">Weeks 9–12  ·  ~25 min per session</div>
+    </div>
+    <div class="phase-goal p3">Goal: Loaded and dynamic — real core strength under resistance</div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Dead bug with KB overhead</div>
+      <div class="core-ex-note">Same movement — now with load. Start very light.</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>8 reps/side</span></div>
+      <div class="core-ex-cue">Hold KB straight up over chest while alternating leg lowers. Low back flat.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Full plank</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>45–60 sec</span></div>
+      <div class="core-ex-cue">Squeeze everything. If form breaks before time is up, stop and rest.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Side plank with hip dip</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>10 dips/side</span></div>
+      <div class="core-ex-cue">From full side plank, lower hip to floor and drive back up. Controlled movement.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Single-leg glute bridge</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>12 reps/side</span></div>
+      <div class="core-ex-cue">Add a 2-sec hold at top for extra glute activation.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">KB march — standing</div>
+      <div class="core-ex-note">Direct carry-over to your KB circuit workouts</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>40 sec</span></div>
+      <div class="core-ex-cue">KB at sides or overhead. Drive knee to hip height. Zero torso sway.</div>
+    </div>
+    <div class="core-ex-row alt">
+      <div class="core-ex-name">Russian twist (feet elevated)</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>15 reps/side</span></div>
+      <div class="core-ex-cue">Feet off floor, rotate controlled — don't swing. Hold KB or DB for load.</div>
+    </div>
+    <div class="core-ex-row">
+      <div class="core-ex-name">Windmill (light KB)</div>
+      <div class="core-ex-note">Most complex move in the program — prioritize form over weight always</div>
+      <div class="core-ex-meta"><span>3 sets</span><span>5 reps/side</span></div>
+      <div class="core-ex-cue">KB overhead, eyes on the bell, push hip out to side as you hinge down. Go very light.</div>
+    </div>
+  </div>
+
+  <div class="note-box warn">
+    <strong>Back pain note:</strong> If anything causes actual pain (not burn) in your lower back, stop that movement. Dead bug and bird dog are spine-safe — lean on those heavily in Phase 1. Pain should reduce noticeably around weeks 3–4 as your TVA strengthens. If it persists, see a professional.
+  </div>
+
+</div>
+
+<!-- ── SETUP TAB ───────────────────────────────────────────────────────── -->
+<div id="tab-setup" class="tab-panel">
+
+  <div class="section-title">Connect Google Sheets</div>
+
+  <div class="setup-banner">
+    <h2>Step 1 — Create a Google Sheet</h2>
+    <p>Your exercise library lives in a Google Sheet. The app reads it live — add an exercise to the sheet and it appears here instantly.</p>
+    <p>Make a copy of the template sheet, or create your own with these columns:</p>
+    <ol>
+      <li><strong>A — Exercise</strong> (name)</li>
+      <li><strong>B — Category</strong> (Full body / Lower / Upper / Core / Cardio)</li>
+      <li><strong>C — Equipment</strong> (display name, e.g. "KB + box")</li>
+      <li><strong>D — Equip. Tag</strong> (must be exactly: KB / Bench / DB / Barbell / Bodyweight / Cardio)</li>
+      <li><strong>E — Key Note</strong></li>
+      <li><strong>F — Sets</strong></li>
+      <li><strong>G — Reps / Time</strong></li>
+    </ol>
+    <p style="margin-top:10px;">Row 1 = headers. Data starts row 2. Sheet name must be <code>KB Library</code> or <code>Full Library</code>.</p>
+  </div>
+
+  <div class="setup-banner">
+    <h2>Step 2 — Get an API Key</h2>
+    <ol>
+      <li>Go to <strong>console.cloud.google.com</strong></li>
+      <li>Create a new project (or select existing)</li>
+      <li>Go to <strong>APIs &amp; Services → Library</strong></li>
+      <li>Search for <strong>Google Sheets API</strong> and enable it</li>
+      <li>Go to <strong>APIs &amp; Services → Credentials</strong></li>
+      <li>Click <strong>Create Credentials → API Key</strong></li>
+      <li>Copy the key and paste it below</li>
+    </ol>
+  </div>
+
+  <div class="setup-banner">
+    <h2>Step 3 — Get your Sheet ID</h2>
+    <p>Open your Google Sheet. The URL looks like:</p>
+    <p><code>docs.google.com/spreadsheets/d/<strong>SHEET_ID_HERE</strong>/edit</code></p>
+    <p>Copy the long ID between <code>/d/</code> and <code>/edit</code> and paste it below.</p>
+    <p style="margin-top:8px;">Then share your sheet: click Share → Anyone with the link → Viewer.</p>
+  </div>
+
+  <div class="control-panel">
+    <div class="control-section-label">API Key</div>
+    <input type="text" class="config-input" id="api-key-input"
+      placeholder="AIzaSy..." style="width:100%;margin-bottom:12px;color:var(--text-dark);background:var(--egg);border-color:var(--border);">
+
+    <div class="control-section-label">Sheet ID</div>
+    <input type="text" class="config-input" id="sheet-id-input"
+      placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" style="width:100%;margin-bottom:12px;color:var(--text-dark);background:var(--egg);border-color:var(--border);">
+
+    <div class="control-section-label">Sheet Name (which library to use)</div>
+    <div class="toggle-group" style="margin-bottom:14px;">
+      <button class="toggle-btn active" id="lib-kb" onclick="setLib('KB Library', this)">KB Library</button>
+      <button class="toggle-btn" id="lib-full" onclick="setLib('Full Library', this)">Full Library</button>
+    </div>
+
+    <button class="regen-btn" onclick="saveConfig()" style="width:100%;">Save &amp; Connect</button>
+    <div id="config-status" class="status-bar" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="control-panel" style="margin-top:0;">
+    <div class="control-section-label">Current config</div>
+    <div id="config-display" style="font-size:13px;color:var(--text-light);line-height:1.8;">
+      Not configured yet.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────
+const state = {
+  apiKey:     localStorage.getItem('gym_api_key')    || '',
+  sheetId:    localStorage.getItem('gym_sheet_id')   || '',
+  sheetName:  localStorage.getItem('gym_sheet_name') || 'KB Library',
+  exercises:  [],
+  circuit:    [],   // array of {exercise, locked}
+  count:      parseInt(localStorage.getItem('gym_count') || '6'),
+  focus:      'Full Body',
+  mode:       'Balanced',
+  equip:      {KB:true, Bench:true, DB:true, Barbell:true, Bodyweight:true, Cardio:true},
+};
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'generator' && state.exercises.length === 0 && state.apiKey) {
+    loadExercises();
+  }
+}
+
+// ── COUNT ─────────────────────────────────────────────────────────────────
+function adjustCount(delta) {
+  state.count = Math.max(1, Math.min(20, state.count + delta));
+  document.getElementById('count-display').textContent = state.count;
+  localStorage.setItem('gym_count', state.count);
+}
+
+// ── TOGGLES ───────────────────────────────────────────────────────────────
+function toggleEquip(btn) {
+  const equip = btn.dataset.equip;
+  state.equip[equip] = !state.equip[equip];
+  btn.classList.toggle('active', state.equip[equip]);
+}
+
+function setFocus(btn) {
+  document.querySelectorAll('.focus-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.focus = btn.dataset.focus;
+}
+
+function setMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.mode = btn.dataset.mode;
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────────────
+function setLib(name, btn) {
+  document.querySelectorAll('#lib-kb, #lib-full').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.sheetName = name;
+}
+
+function saveConfig() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const id  = document.getElementById('sheet-id-input').value.trim();
+  if (!key || !id) {
+    setConfigStatus('Please enter both an API key and Sheet ID.', 'error');
+    return;
+  }
+  state.apiKey   = key;
+  state.sheetId  = id;
+  localStorage.setItem('gym_api_key',    key);
+  localStorage.setItem('gym_sheet_id',   id);
+  localStorage.setItem('gym_sheet_name', state.sheetName);
+  setConfigStatus('Saved! Loading exercises...', 'success');
+  updateConfigDisplay();
+  loadExercises(true);
+}
+
+function updateConfigDisplay() {
+  const el = document.getElementById('config-display');
+  if (!state.apiKey || !state.sheetId) {
+    el.textContent = 'Not configured yet.';
+    return;
+  }
+  el.innerHTML = `
+    <strong>Sheet:</strong> ${state.sheetName}<br>
+    <strong>Sheet ID:</strong> ${state.sheetId.slice(0,20)}...<br>
+    <strong>API Key:</strong> ${state.apiKey.slice(0,12)}...
+  `;
+}
+
+function setConfigStatus(msg, type) {
+  const el = document.getElementById('config-status');
+  el.textContent = msg;
+  el.className = 'status-bar ' + (type || '');
+  el.style.display = 'block';
+}
+
+// ── LOAD EXERCISES FROM GOOGLE SHEETS ─────────────────────────────────────
+async function loadExercises(showFeedback) {
+  if (!state.apiKey || !state.sheetId) {
+    document.getElementById('not-configured').style.display = 'block';
+    return;
+  }
+  document.getElementById('not-configured').style.display = 'none';
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${encodeURIComponent(state.sheetName + '!A2:G500')}?key=${state.apiKey}`;
+
+  try {
+    setStatus('Loading exercises...', '');
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.error) {
+      setStatus('Error: ' + data.error.message, 'error');
+      if (showFeedback) setConfigStatus('Connection failed: ' + data.error.message, 'error');
+      return;
+    }
+
+    const rows = data.values || [];
+    state.exercises = rows
+      .filter(r => r[0] && r[0].trim())
+      .map(r => ({
+        name:     r[0] || '',
+        category: r[1] || '',
+        equipment:r[2] || '',
+        tag:      r[3] || '',
+        note:     r[4] || '',
+        sets:     r[5] || '',
+        reps:     r[6] || '',
+      }));
+
+    setStatus(`${state.exercises.length} exercises loaded`, 'success');
+    if (showFeedback) setConfigStatus(`Connected! ${state.exercises.length} exercises loaded.`, 'success');
+
+    // Auto-generate on first load
+    if (state.circuit.length === 0) regenerate();
+
+  } catch(e) {
+    setStatus('Network error — check your API key and Sheet ID', 'error');
+    if (showFeedback) setConfigStatus('Network error: ' + e.message, 'error');
+  }
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.className = 'status-bar ' + (type || '');
+  el.style.display = msg ? 'block' : 'none';
+}
+
+// ── EXERCISE FILTERING ────────────────────────────────────────────────────
+function getPool(excludeNames, category) {
+  return state.exercises.filter(ex => {
+    // Equipment filter
+    if (!state.equip[ex.tag]) return false;
+
+    // Focus filter
+    if (state.focus !== 'Full Body') {
+      if (state.focus === 'Core' && ex.category !== 'Core' && ex.category !== 'Full body') return false;
+      if (state.focus !== 'Core' && ex.category !== state.focus) return false;
+    }
+
+    // Balanced mode: category match
+    if (state.mode === 'Balanced' && category && ex.category !== category) return false;
+
+    // Dedup
+    if (excludeNames.has(ex.name)) return false;
+
+    return true;
+  });
+}
+
+function pickRandom(arr) {
+  if (!arr.length) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── REGENERATE ────────────────────────────────────────────────────────────
+function regenerate() {
+  if (!state.apiKey || !state.sheetId) {
+    loadExercises();
+    return;
+  }
+  if (state.exercises.length === 0) {
+    loadExercises().then(() => { if (state.exercises.length) _doGenerate(); });
+    return;
+  }
+  _doGenerate();
+}
+
+function _doGenerate() {
+  const btn = document.getElementById('regen-btn');
+  btn.classList.add('loading');
+  btn.textContent = '⟳ Building...';
+
+  setTimeout(() => {
+    const used = new Set();
+    // Pre-fill used with locked exercises so they don't get duplicated
+    state.circuit.forEach(slot => {
+      if (slot && slot.locked && slot.exercise) used.add(slot.exercise.name);
+    });
+
+    // Get active categories for balanced mode
+    let cats = ['Full body','Lower','Upper','Core','Cardio','Bench'];
+    if (state.mode === 'Balanced') {
+      // Only include cats that have exercises in the active pool
+      cats = cats.filter(cat => {
+        return state.exercises.some(ex =>
+          state.equip[ex.tag] &&
+          ex.category === cat &&
+          (state.focus === 'Full Body' ||
+           (state.focus === 'Core' && (ex.category === 'Core' || ex.category === 'Full body')) ||
+           ex.category === state.focus)
+        );
+      });
+    }
+
+    const newCircuit = [];
+    let catIdx = 0;
+
+    for (let i = 0; i < state.count; i++) {
+      // If this slot is locked, preserve it
+      if (state.circuit[i] && state.circuit[i].locked) {
+        newCircuit.push(state.circuit[i]);
+        continue;
+      }
+
+      let cat = state.mode === 'Balanced' && cats.length ? cats[catIdx % cats.length] : null;
+      if (state.mode === 'Balanced') catIdx++;
+
+      let pool = getPool(used, cat);
+
+      // Fallback: if no exercises in this category, pick from any active
+      if (!pool.length && cat) {
+        pool = getPool(used, null);
+      }
+
+      const pick = pickRandom(pool);
+      if (pick) {
+        used.add(pick.name);
+        newCircuit.push({ exercise: pick, locked: false });
+      }
+    }
+
+    state.circuit = newCircuit;
+    renderCircuit();
+
+    btn.classList.remove('loading');
+    btn.textContent = '⟳ Regenerate';
+  }, 50);
+}
+
+// ── SWAP ──────────────────────────────────────────────────────────────────
+function swap(idx) {
+  if (state.circuit[idx] && state.circuit[idx].locked) return;
+
+  const used = new Set(
+    state.circuit
+      .filter((s, i) => i !== idx && s && s.exercise)
+      .map(s => s.exercise.name)
+  );
+
+  const current = state.circuit[idx];
+  const cat = state.mode === 'Balanced' && current ? current.exercise.category : null;
+  let pool = getPool(used, cat);
+  if (!pool.length) pool = getPool(used, null);
+
+  const pick = pickRandom(pool);
+  if (pick) {
+    state.circuit[idx] = { exercise: pick, locked: false };
+    renderCircuit();
+  }
+}
+
+// ── LOCK ──────────────────────────────────────────────────────────────────
+function toggleLock(idx) {
+  if (state.circuit[idx]) {
+    state.circuit[idx].locked = !state.circuit[idx].locked;
+    renderCircuit();
+  }
+}
+
+// ── RENDER CIRCUIT ────────────────────────────────────────────────────────
+function catClass(cat) {
+  if (!cat) return '';
+  const map = {
+    'Full body': 'cat-full-body', 'Lower': 'cat-lower', 'Upper': 'cat-upper',
+    'Core': 'cat-core', 'Cardio': 'cat-cardio', 'Bench': 'cat-bench'
+  };
+  return map[cat] || '';
+}
+
+function renderCircuit() {
+  const container = document.getElementById('circuit-container');
+
+  if (!state.circuit.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🏋️</div>
+        <p>Tap Regenerate to build your circuit</p>
+      </div>`;
+    return;
+  }
+
+  const rows = state.circuit.map((slot, idx) => {
+    if (!slot || !slot.exercise) return '';
+    const ex = slot.exercise;
+    const isAlt    = idx % 2 === 1;
+    const isLocked = slot.locked;
+    return `
+      <div class="ex-row${isAlt ? ' alt' : ''}${isLocked ? ' locked' : ''}">
+        <div class="ex-num">${idx + 1}</div>
+        <div class="ex-main">
+          <div class="ex-name">${ex.name}</div>
+          <div>
+            <span class="cat-pill ${catClass(ex.category)}">${ex.category}</span>
+          </div>
+          <div class="ex-meta">${ex.equipment}${ex.sets ? ' · ' + ex.sets + ' sets' : ''}${ex.reps ? ' · ' + ex.reps : ''}</div>
+          ${ex.note ? `<div class="ex-note">${ex.note}</div>` : ''}
+        </div>
+        <div class="ex-actions">
+          <button class="ex-action-btn swap-btn" onclick="swap(${idx})"${isLocked ? ' disabled style="opacity:0.4"' : ''}>Swap</button>
+          <button class="ex-action-btn lock-btn${isLocked ? ' locked' : ''}" onclick="toggleLock(${idx})">
+            ${isLocked ? '🔒 Locked' : 'Lock'}
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="circuit-card">
+    <div class="circuit-header">
+      <h3>Your Circuit</h3>
+      <span>${state.exercises.length} exercises in pool</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+(function init() {
+  document.getElementById('count-display').textContent = state.count;
+
+  if (state.apiKey) {
+    document.getElementById('api-key-input').value  = state.apiKey;
+    document.getElementById('sheet-id-input').value = state.sheetId;
+    updateConfigDisplay();
+    // Load exercises immediately
+    if (state.sheetName === 'Full Library') {
+      document.getElementById('lib-kb').classList.remove('active');
+      document.getElementById('lib-full').classList.add('active');
+    }
+    loadExercises();
+  } else {
+    document.getElementById('not-configured').style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>
