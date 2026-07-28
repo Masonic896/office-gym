@@ -201,6 +201,38 @@
     justify-content: center; gap: 2px;
   }
   .ex-name { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
+  /* ── SWOLE BUDDY (easter egg) ─────────────────────────────────────── */
+  .buddy-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; cursor: pointer; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent; padding: 0 2px;
+  }
+  .buddy-img {
+    width: 68px; height: auto; display: block;
+    image-rendering: -webkit-optimize-contrast;
+    transition: transform 0.18s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  .buddy-wrap:hover .buddy-img,
+  .buddy-wrap.poked .buddy-img { transform: scale(1.18) rotate(-4deg); }
+  .buddy-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+    color: var(--text-light); text-transform: uppercase;
+    white-space: nowrap; transition: color 0.2s;
+  }
+  .buddy-wrap:hover .buddy-label { color: var(--forest); }
+  .buddy-wrap.poked .buddy-label { color: var(--orange); }
+  @keyframes buddy-shake {
+    0%,100% { transform: scale(1.18) rotate(-4deg); }
+    25%     { transform: scale(1.22) rotate(5deg); }
+    50%     { transform: scale(1.18) rotate(-5deg); }
+    75%     { transform: scale(1.22) rotate(3deg); }
+  }
+  .buddy-wrap.poked .buddy-img { animation: buddy-shake 0.4s ease-in-out; }
+  @media (prefers-reduced-motion: reduce) {
+    .buddy-img, .buddy-wrap.poked .buddy-img { animation: none; transition: none; }
+  }
+
   .lib-search {
     width: 100%; padding: 11px 14px; border-radius: 20px;
     border: 1.5px solid var(--border); background: var(--egg);
@@ -403,13 +435,17 @@
     </div>
 
     <div class="control-row">
+      <div class="buddy-wrap" id="buddy" onclick="pokeBuddy()" title="don't mind him">
+        <img class="buddy-img" id="buddy-img" src="otter1.png" alt="gym otter" draggable="false">
+        <div class="buddy-label" id="buddy-label">warming up</div>
+      </div>
       <div class="count-control">
         <span class="count-label">Exercises</span>
         <button class="count-btn" onclick="adjustCount(-1)">−</button>
         <span class="count-value" id="count-display">6</span>
         <button class="count-btn" onclick="adjustCount(1)">+</button>
       </div>
-      <button class="regen-btn" id="regen-btn" onclick="regenerate()">⟳ Generate</button>
+      <button class="regen-btn" id="regen-btn" onclick="generateCircuit()">⟳ Generate</button>
     </div>
   </div>
 
@@ -667,7 +703,7 @@
   <div class="control-panel" style="margin-top:0;">
     <div class="control-section-label">Set &amp; rep edits</div>
     <div style="font-size:13px;color:var(--text-light);line-height:1.6;margin-bottom:10px;">
-      Sets and reps you change on the Circuit tab are saved per exercise and stick across regenerates.
+      Sets and reps you change on the Circuit tab are saved per exercise and stick across generates.
     </div>
     <button onclick="clearOverrides()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--border);border-radius:20px;color:var(--text-light);font-size:13px;font-weight:500;cursor:pointer;">Clear all set &amp; rep edits</button>
   </div>
@@ -728,6 +764,7 @@ function adjustCount(delta) {
   state.count = Math.max(1, Math.min(20, state.count + delta));
   document.getElementById('count-display').textContent = state.count;
   localStorage.setItem('gym_count', state.count);
+  renderBuddy();
 }
 
 // ── TOGGLES ───────────────────────────────────────────────────────────────
@@ -849,7 +886,7 @@ async function loadExercises(showFeedback) {
     if (showFeedback) setConfigStatus(`Connected! ${state.exercises.length} exercises loaded.`, 'success');
 
     // Auto-generate on first load
-    if (state.circuit.length === 0) regenerate();
+    if (state.circuit.length === 0) generateCircuit();
     renderLibrary();
 
   } catch(e) {
@@ -893,7 +930,7 @@ function pickRandom(arr) {
 }
 
 // ── REGENERATE ────────────────────────────────────────────────────────────
-function regenerate() {
+function generateCircuit() {
   if (!state.apiKey || !state.sheetId) {
     loadExercises();
     return;
@@ -998,7 +1035,7 @@ function toggleLock(idx) {
 }
 
 // ── SETS / REPS OVERRIDES ─────────────────────────────────────────────────
-// Keyed by exercise name so an edit sticks across regenerates and sessions.
+// Keyed by exercise name so an edit sticks across generates and sessions.
 function getVal(ex, field) {
   const o = state.overrides[ex.name];
   if (o && o[field] !== undefined && o[field] !== '') return o[field];
@@ -1038,6 +1075,49 @@ function clearOverrides() {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;')
                   .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── GYM OTTER (easter egg) ────────────────────────────────────────────────
+// Five artwork stages swapped by exercise count, Sausage Fattener style.
+// Images live next to index.html as otter1.png ... otter5.png
+const BUDDY = [
+  { max: 2,  label:'warming up'    },   // 1-2
+  { max: 5,  label:"let's go"      },   // 3-5
+  { max: 9,  label:'getting spicy' },   // 6-9
+  { max:20,  label:'send help'     },   // 10-20
+];
+
+function buddyLevel() {
+  for (let i = 0; i < BUDDY.length; i++) {
+    if (state.count <= BUDDY[i].max) return i;
+  }
+  return BUDDY.length - 1;
+}
+
+// Preload so swapping never flashes an empty frame
+const otterImgs = BUDDY.map((_, i) => {
+  const im = new Image();
+  im.src = `otter${i + 1}.png`;
+  return im;
+});
+
+function renderBuddy() {
+  const lvl = buddyLevel();
+  const img = document.getElementById('buddy-img');
+  const lab = document.getElementById('buddy-label');
+  if (!img) return;
+  const next = `otter${lvl + 1}.png`;
+  if (!img.src.endsWith(next)) img.src = next;
+  img.alt = `gym otter, ${BUDDY[lvl].label}`;
+  if (lab) lab.textContent = BUDDY[lvl].label;
+}
+
+function pokeBuddy() {
+  const w = document.getElementById('buddy');
+  w.classList.remove('poked');
+  void w.offsetWidth;          // restart the animation
+  w.classList.add('poked');
+  setTimeout(() => w.classList.remove('poked'), 420);
 }
 
 // ── LIBRARY BROWSER ───────────────────────────────────────────────────────
@@ -1193,6 +1273,7 @@ function renderCircuit() {
 (function init() {
   document.getElementById('count-display').textContent = state.count;
   document.getElementById('sheet-name-input').value = state.sheetName;
+  renderBuddy();
 
   if (state.apiKey && state.sheetId) {
     document.getElementById('api-key-input').value  = state.apiKey;
