@@ -62,6 +62,14 @@
     transition: all 0.15s; letter-spacing: 0.2px;
   }
   .tab-btn.active { background: var(--egg); color: var(--navy); }
+  .tab-btn.minor {
+    flex: 0 0 auto; padding: 10px 14px; font-size: 12px;
+    font-weight: 500; background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.45);
+  }
+  .tab-btn.minor.active {
+    background: var(--egg); color: var(--navy); font-weight: 600;
+  }
 
   /* ── TAB PANELS ───────────────────────────────────────────────────── */
   .tab-panel { display: none; padding: 16px; }
@@ -307,7 +315,7 @@
   <nav class="tabs">
     <button class="tab-btn active" onclick="showTab('generator')">Circuit Generator</button>
     <button class="tab-btn" onclick="showTab('core')">Core Routine</button>
-    <button class="tab-btn" onclick="showTab('setup')">Setup</button>
+    <button class="tab-btn minor" onclick="showTab('setup')">⚙</button>
   </nav>
 </header>
 
