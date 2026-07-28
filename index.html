@@ -14,13 +14,16 @@
     --navy:        #1B2A4A;
     --navy-mid:    #2A3F6A;
     --navy-lite:   #D6DCE8;
-    --forest:      #2D5A3D;
-    --forest-mid:  #3D7A52;
-    --forest-lite: #D6EAE0;
+    --action:      #B4A0E5;   /* wisteria - Generate, active equipment */
+    --action-deep: #6B58A8;   /* darker wisteria where white text is needed */
+    --action-lite: #EDE7FA;
+    --accent:      #A14A76;   /* plum - Swap, highlights */
+    --accent-lite: #F5DFEA;
+    --almond:      #EDE2D6;   /* athlete card surface */
     --egg:         #F5F2EB;
     --egg-dark:    #EBE7DE;
-    --orange:      #E8873A;
-    --orange-lite: #FBE8D5;
+    --orange:      #FCA311;   /* kept for the Cardio category pill */
+    --orange-lite: #FDEBCB;
     --white:       #FFFFFF;
     --light-bg:    #FAFAF8;
     --text-dark:   #1A1A1A;
@@ -51,9 +54,11 @@
   .app-title {
     color: white; font-size: 20px; font-weight: 700;
     letter-spacing: -0.3px; margin-bottom: 14px;
+    max-width: 728px; margin-left: auto; margin-right: auto;
   }
   .tabs {
     display: flex; gap: 4px;
+    max-width: 728px; margin: 0 auto;
   }
   .tab-btn {
     flex: 1; padding: 10px 8px; border: none; cursor: pointer;
@@ -72,7 +77,7 @@
   }
 
   /* ── TAB PANELS ───────────────────────────────────────────────────── */
-  .tab-panel { display: none; padding: 16px; }
+  .tab-panel { display: none; padding: 16px; max-width: 760px; margin: 0 auto; }
   .tab-panel.active { display: block; }
 
   /* ── SETUP BANNER ─────────────────────────────────────────────────── */
@@ -81,7 +86,7 @@
     color: white; border-radius: var(--radius);
     padding: 16px; margin-bottom: 16px;
   }
-  .setup-banner h2 { font-size: 16px; margin-bottom: 8px; color: var(--orange); }
+  .setup-banner h2 { font-size: 16px; margin-bottom: 8px; color: #E7C9DA; }
   .setup-banner p { font-size: 13px; line-height: 1.6; opacity: 0.85; margin-bottom: 10px; }
   .setup-banner ol { font-size: 13px; line-height: 1.8; opacity: 0.85; padding-left: 18px; }
   .setup-banner code {
@@ -98,9 +103,9 @@
     font-size: 13px; outline: none;
   }
   .config-input::placeholder { color: rgba(255,255,255,0.45); }
-  .config-input:focus { border-color: var(--orange); }
+  .config-input:focus { border-color: var(--accent); }
   .config-save-btn {
-    padding: 10px 20px; background: var(--orange); color: white;
+    padding: 10px 20px; background: var(--accent); color: white;
     border: none; border-radius: var(--radius-sm); font-size: 13px;
     font-weight: 600; cursor: pointer; white-space: nowrap;
   }
@@ -125,29 +130,25 @@
     -webkit-user-select: none;
   }
   .toggle-btn.active {
-    background: var(--forest); border-color: var(--forest);
-    color: white; font-weight: 600;
+    background: var(--action); border-color: var(--action);
+    color: var(--text-dark); font-weight: 700;
   }
   .toggle-btn.active.focus-btn { background: var(--navy); border-color: var(--navy); }
   .toggle-btn.active.mode-btn {
-    background: var(--navy-mid); border-color: var(--navy-mid);
-  }
-  .toggle-btn.active.mode-btn.random {
-    background: var(--orange); border-color: var(--orange);
+    background: var(--navy); border-color: var(--navy); color: white;
   }
   .toggle-btn:active { transform: scale(0.97); }
 
   .control-row {
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    display: flex; flex-direction: column; align-items: stretch; gap: 12px;
   }
-  /* count + otter ride the right edge so the row isn't half empty */
-  .control-right {
-    margin-left: auto; display: flex; align-items: center; gap: 14px;
-  }
-  /* on narrow screens go back to a stacked, full-width layout */
-  @media (max-width: 620px) {
-    .regen-btn { flex: 1 1 100%; }
-    .control-right { margin-left: 0; width: 100%; justify-content: space-between; }
+  /* otter + count stacked into one block, like an athlete card */
+  .athlete-card {
+    align-self: center;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; padding: 12px 18px 14px;
+    background: var(--almond); border: 1.5px solid var(--border);
+    border-radius: 18px; min-width: 224px;
   }
   .count-control {
     display: flex; align-items: center; gap: 8px;
@@ -166,10 +167,10 @@
     min-width: 20px; text-align: center;
   }
   .regen-btn {
-    flex: 0 0 auto; padding: 12px 30px; background: var(--forest);
-    color: white; border: none; border-radius: 20px; font-size: 14px;
+    width: 100%; padding: 15px 30px; background: var(--action);
+    color: var(--text-dark); border: none; border-radius: 20px; font-size: 14px;
     font-weight: 700; cursor: pointer; letter-spacing: 0.3px;
-    transition: all 0.15s; box-shadow: 0 2px 8px rgba(45,90,61,0.3);
+    transition: all 0.15s; box-shadow: 0 2px 10px rgba(107,88,168,0.28);
   }
   .regen-btn:active { transform: scale(0.98); opacity: 0.9; }
   .regen-btn.loading { opacity: 0.7; pointer-events: none; }
@@ -206,9 +207,15 @@
   .ex-row.alt .ex-num { background: var(--navy-mid); }
 
   .ex-main {
-    padding: 10px 12px; display: flex; flex-direction: column;
-    justify-content: center; gap: 2px;
+    padding: 11px 14px; display: flex; flex-direction: column;
+    justify-content: center; gap: 3px;
   }
+  /* name on the left, suggested reps pushed to the right of the same line */
+  .ex-top {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .ex-tags { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
   .ex-name { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
   /* ── SWOLE BUDDY (easter egg) ─────────────────────────────────────── */
   .buddy-wrap {
@@ -217,7 +224,7 @@
     -webkit-tap-highlight-color: transparent; padding: 0 2px;
   }
   .buddy-img {
-    width: 80px; height: auto; display: block;
+    width: 132px; height: auto; display: block;
     image-rendering: -webkit-optimize-contrast;
     transition: transform 0.18s cubic-bezier(.34,1.56,.64,1);
     pointer-events: none;
@@ -229,8 +236,8 @@
     color: var(--text-light); text-transform: uppercase;
     white-space: nowrap; transition: color 0.2s;
   }
-  .buddy-wrap:hover .buddy-label { color: var(--forest); }
-  .buddy-wrap.poked .buddy-label { color: var(--orange); }
+  .buddy-wrap:hover .buddy-label { color: var(--action-deep); }
+  .buddy-wrap.poked .buddy-label { color: var(--accent); }
   @keyframes buddy-shake {
     0%,100% { transform: scale(1.18) rotate(-4deg); }
     25%     { transform: scale(1.22) rotate(5deg); }
@@ -248,7 +255,7 @@
     font-family: inherit; font-size: 14px; color: var(--text-dark);
     outline: none;
   }
-  .lib-search:focus { border-color: var(--forest); background: white; }
+  .lib-search:focus { border-color: var(--action-deep); background: white; }
   .lib-count {
     font-size: 12px; color: var(--text-light);
     padding: 0 4px 8px; text-align: right;
@@ -267,33 +274,26 @@
   .lib-meta { font-size: 12px; color: var(--text-light); margin-bottom: 3px; }
   .lib-cue { font-size: 12px; color: var(--text-mid); line-height: 1.45; }
   .ex-meta { font-size: 12px; color: var(--text-light); }
-  .ex-edit-row {
-    display: flex; align-items: center; gap: 6px;
-    margin-top: 4px; flex-wrap: wrap;
+  .ex-suggest {
+    display: flex; align-items: baseline; gap: 6px;
+    flex-shrink: 0; flex-wrap: wrap;
   }
-  .ex-field {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: var(--egg-dark); border-radius: 12px; padding: 2px 4px 2px 8px;
+  .ex-suggest-label {
+    font-size: 10px; font-weight: 700; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
-  .ex-row.alt .ex-field { background: #E0DCD2; }
-  .ex-field label {
-    font-size: 10px; font-weight: 600; color: var(--text-light);
-    text-transform: uppercase; letter-spacing: 0.4px;
+  .ex-suggest-val {
+    font-size: 12px; font-weight: 600; color: var(--text-dark);
+    background: var(--egg-dark); border-radius: 10px; padding: 2px 9px;
   }
-  .ex-input {
-    border: none; background: white; border-radius: 8px;
-    font-family: inherit; font-size: 12px; font-weight: 600;
-    color: var(--text-dark); padding: 3px 6px; outline: none;
-    text-align: center; min-width: 0;
+  .ex-row.alt .ex-suggest-val { background: #E0DCD2; }
+  .ex-note {
+    font-size: 12px; color: var(--text-mid); margin-top: 2px;
+    line-height: 1.45; font-style: italic;
   }
-  .ex-input:focus { box-shadow: 0 0 0 2px var(--forest); }
-  .ex-input.sets { width: 44px; }
-  .ex-input.reps { width: 104px; }
-  .ex-input.edited { background: #FFF6E8; }
-  .ex-note { font-size: 11px; color: var(--text-mid); margin-top: 4px; line-height: 1.4; }
   .cat-pill {
     display: inline-block; font-size: 10px; font-weight: 600;
-    padding: 2px 7px; border-radius: 10px; margin-top: 3px;
+    padding: 2px 8px; border-radius: 10px;
   }
   .cat-full-body { background: #DCE8F5; color: #1B3A6A; }
   .cat-lower     { background: #D6EAE0; color: #1E4A2D; }
@@ -313,7 +313,7 @@
     min-width: 52px;
   }
   .ex-action-btn:active { opacity: 0.7; }
-  .swap-btn { background: var(--orange-lite); color: var(--orange); border-bottom: 1px solid var(--border); }
+  .swap-btn { background: var(--accent); color: #fff; border-bottom: 1px solid var(--border); }
   .lock-btn { background: var(--navy-lite); color: var(--navy); }
   .lock-btn.locked { background: var(--navy); color: white; }
 
@@ -332,7 +332,7 @@
     margin-bottom: 8px;
   }
   .status-bar.error { color: #C0392B; }
-  .status-bar.success { color: var(--forest); }
+  .status-bar.success { color: var(--action-deep); }
 
   /* ── CORE ROUTINE ─────────────────────────────────────────────────── */
   .phase-card {
@@ -342,7 +342,7 @@
   .phase-header {
     padding: 14px 16px;
   }
-  .phase-header.p1 { background: var(--forest); }
+  .phase-header.p1 { background: var(--action-deep); }
   .phase-header.p2 { background: var(--navy); }
   .phase-header.p3 { background: #7A4A10; }
   .phase-title { color: white; font-size: 16px; font-weight: 700; }
@@ -351,7 +351,7 @@
     padding: 10px 16px; font-size: 13px; font-weight: 500;
     border-bottom: 1px solid var(--border);
   }
-  .phase-goal.p1 { background: var(--forest-lite); color: var(--forest); }
+  .phase-goal.p1 { background: var(--action-lite); color: var(--action-deep); }
   .phase-goal.p2 { background: var(--navy-lite); color: var(--navy); }
   .phase-goal.p3 { background: #F5EDD6; color: #5A4A10; }
 
@@ -374,12 +374,12 @@
     margin-bottom: 16px; font-size: 13px; line-height: 1.6;
   }
   .note-box.warn { background: #FEF3E2; color: #7A4A00; }
-  .note-box.info { background: var(--forest-lite); color: var(--forest); }
+  .note-box.info { background: var(--action-lite); color: var(--action-deep); }
 
   /* ── LOADING SPINNER ──────────────────────────────────────────────── */
   .spinner {
     width: 32px; height: 32px; border: 3px solid var(--border);
-    border-top-color: var(--forest); border-radius: 50%;
+    border-top-color: var(--action-deep); border-radius: 50%;
     animation: spin 0.8s linear infinite; margin: 30px auto;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -419,14 +419,10 @@
   <div id="status-bar" class="status-bar" style="display:none;"></div>
 
   <div class="control-panel">
-    <div class="control-section-label">Equipment</div>
-    <div class="toggle-group" id="equip-toggles">
-      <button class="toggle-btn active" data-equip="KB" onclick="toggleEquip(this)">KB</button>
-      <button class="toggle-btn active" data-equip="Bench" onclick="toggleEquip(this)">Bench</button>
-      <button class="toggle-btn active" data-equip="DB" onclick="toggleEquip(this)">DB</button>
-      <button class="toggle-btn active" data-equip="Barbell" onclick="toggleEquip(this)">Barbell</button>
-      <button class="toggle-btn active" data-equip="Bodyweight" onclick="toggleEquip(this)">Bodyweight</button>
-      <button class="toggle-btn active" data-equip="Cardio" onclick="toggleEquip(this)">Cardio</button>
+    <div class="control-section-label">Mode</div>
+    <div class="toggle-group" id="mode-toggles">
+      <button class="toggle-btn mode-btn active" data-mode="Balanced" onclick="setMode(this)">Balanced</button>
+      <button class="toggle-btn mode-btn random" data-mode="Random" onclick="setMode(this)">Random</button>
     </div>
 
     <div class="control-section-label">Focus</div>
@@ -437,26 +433,30 @@
       <button class="toggle-btn focus-btn" data-focus="Core" onclick="setFocus(this)">Core</button>
     </div>
 
-    <div class="control-section-label">Mode</div>
-    <div class="toggle-group" id="mode-toggles" style="margin-bottom:14px;">
-      <button class="toggle-btn mode-btn active" data-mode="Balanced" onclick="setMode(this)">Balanced</button>
-      <button class="toggle-btn mode-btn random" data-mode="Random" onclick="setMode(this)">Random</button>
+    <div class="control-section-label">Equipment</div>
+    <div class="toggle-group" id="equip-toggles" style="margin-bottom:14px;">
+      <button class="toggle-btn active" data-equip="KB" onclick="toggleEquip(this)">KB</button>
+      <button class="toggle-btn active" data-equip="Bench" onclick="toggleEquip(this)">Bench</button>
+      <button class="toggle-btn active" data-equip="DB" onclick="toggleEquip(this)">DB</button>
+      <button class="toggle-btn active" data-equip="Barbell" onclick="toggleEquip(this)">Barbell</button>
+      <button class="toggle-btn active" data-equip="Bodyweight" onclick="toggleEquip(this)">Bodyweight</button>
+      <button class="toggle-btn active" data-equip="Cardio" onclick="toggleEquip(this)">Cardio</button>
     </div>
 
     <div class="control-row">
-      <button class="regen-btn" id="regen-btn" onclick="generateCircuit()">⟳ Generate</button>
-      <div class="control-right">
+      <div class="athlete-card">
+        <div class="buddy-wrap" id="buddy" onclick="pokeBuddy()" title="don't mind him">
+          <img class="buddy-img" id="buddy-img" src="otter1.png" alt="gym otter" draggable="false">
+          <div class="buddy-label" id="buddy-label">warming up</div>
+        </div>
         <div class="count-control">
           <span class="count-label">Exercises</span>
           <button class="count-btn" onclick="adjustCount(-1)">−</button>
           <span class="count-value" id="count-display">6</span>
           <button class="count-btn" onclick="adjustCount(1)">+</button>
         </div>
-        <div class="buddy-wrap" id="buddy" onclick="pokeBuddy()" title="don't mind him">
-          <img class="buddy-img" id="buddy-img" src="otter1.png" alt="gym otter" draggable="false">
-          <div class="buddy-label" id="buddy-label">warming up</div>
-        </div>
       </div>
+      <button class="regen-btn" id="regen-btn" onclick="generateCircuit()">⟳ Generate</button>
     </div>
   </div>
 
@@ -712,14 +712,6 @@
   </div>
 
   <div class="control-panel" style="margin-top:0;">
-    <div class="control-section-label">Set &amp; rep edits</div>
-    <div style="font-size:13px;color:var(--text-light);line-height:1.6;margin-bottom:10px;">
-      Sets and reps you change on the Circuit tab are saved per exercise and stick across generates.
-    </div>
-    <button onclick="clearOverrides()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--border);border-radius:20px;color:var(--text-light);font-size:13px;font-weight:500;cursor:pointer;">Clear all set &amp; rep edits</button>
-  </div>
-
-  <div class="control-panel" style="margin-top:0;">
     <div class="control-section-label">Current config</div>
     <div id="config-display" style="font-size:13px;color:var(--text-light);line-height:1.8;">
       Not configured yet.
@@ -752,7 +744,6 @@ const state = {
   focus:      'Full Body',
   mode:       'Balanced',
   equip:      {KB:true, Bench:true, DB:true, Barbell:true, Bodyweight:true, Cardio:true},
-  overrides:  JSON.parse(localStorage.getItem('gym_overrides') || '{}'),
 };
 
 // ── TABS ──────────────────────────────────────────────────────────────────
@@ -1045,49 +1036,6 @@ function toggleLock(idx) {
   }
 }
 
-// ── SETS / REPS OVERRIDES ─────────────────────────────────────────────────
-// Keyed by exercise name so an edit sticks across generates and sessions.
-function getVal(ex, field) {
-  const o = state.overrides[ex.name];
-  if (o && o[field] !== undefined && o[field] !== '') return o[field];
-  return ex[field] || '';
-}
-
-function isEdited(ex, field) {
-  const o = state.overrides[ex.name];
-  return !!(o && o[field] !== undefined && o[field] !== '' && o[field] !== ex[field]);
-}
-
-function setOverride(name, field, value, inputEl) {
-  const v = value.trim();
-  if (!state.overrides[name]) state.overrides[name] = {};
-  state.overrides[name][field] = v;
-
-  // Drop the entry entirely if nothing meaningful is stored
-  const o = state.overrides[name];
-  if (!o.sets && !o.reps) delete state.overrides[name];
-
-  localStorage.setItem('gym_overrides', JSON.stringify(state.overrides));
-
-  // Update highlight without a full re-render so focus isn't lost
-  if (inputEl) {
-    const slot = state.circuit.find(s => s && s.exercise && s.exercise.name === name);
-    if (slot) inputEl.classList.toggle('edited', isEdited(slot.exercise, field));
-  }
-}
-
-function clearOverrides() {
-  state.overrides = {};
-  localStorage.removeItem('gym_overrides');
-  renderCircuit();
-  setConfigStatus('All set and rep edits cleared.', 'success');
-}
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;')
-                  .replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 // ── GYM OTTER (easter egg) ────────────────────────────────────────────────
 // Five artwork stages swapped by exercise count, Sausage Fattener style.
 // Images live next to index.html as otter1.png ... otter5.png
@@ -1241,24 +1189,18 @@ function renderCircuit() {
       <div class="ex-row${isAlt ? ' alt' : ''}${isLocked ? ' locked' : ''}">
         <div class="ex-num">${idx + 1}</div>
         <div class="ex-main">
-          <div class="ex-name">${ex.name}</div>
-          <div>
-            <span class="cat-pill ${catClass(ex.category)}">${ex.category}</span>
+          <div class="ex-top">
+            <div class="ex-name">${ex.name}</div>
+            ${(ex.sets || ex.reps) ? `
+            <div class="ex-suggest">
+              <span class="ex-suggest-label">Suggested</span>
+              ${ex.sets ? `<span class="ex-suggest-val">${ex.sets} sets</span>` : ''}
+              ${ex.reps ? `<span class="ex-suggest-val">${ex.reps}</span>` : ''}
+            </div>` : ''}
           </div>
-          <div class="ex-meta">${ex.equipment}</div>
-          <div class="ex-edit-row">
-            <span class="ex-field">
-              <label for="sets-${idx}">Sets</label>
-              <input id="sets-${idx}" class="ex-input sets${isEdited(ex,'sets') ? ' edited' : ''}"
-                     type="text" inputmode="numeric" value="${esc(getVal(ex,'sets'))}"
-                     onchange="setOverride('${esc(ex.name).replace(/'/g,"\\'")}','sets',this.value,this)">
-            </span>
-            <span class="ex-field">
-              <label for="reps-${idx}">Reps</label>
-              <input id="reps-${idx}" class="ex-input reps${isEdited(ex,'reps') ? ' edited' : ''}"
-                     type="text" value="${esc(getVal(ex,'reps'))}"
-                     onchange="setOverride('${esc(ex.name).replace(/'/g,"\\'")}','reps',this.value,this)">
-            </span>
+          <div class="ex-tags">
+            <span class="cat-pill ${catClass(ex.category)}">${ex.category}</span>
+            <span class="ex-meta">${ex.equipment}</span>
           </div>
           ${ex.note ? `<div class="ex-note">${ex.note}</div>` : ''}
         </div>
